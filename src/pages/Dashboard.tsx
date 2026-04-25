@@ -1,18 +1,59 @@
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
-import { Bug, Scan, Shield, Code, ArrowUpRight, Upload } from "lucide-react";
-
-const stats = [
-  { label: "Bugs Found", value: "—", icon: Bug, color: "text-destructive" },
-  { label: "Scans Run", value: "—", icon: Scan, color: "text-primary" },
-  { label: "Fixed", value: "—", icon: Shield, color: "text-accent" },
-  { label: "Projects", value: "—", icon: Code, color: "text-yellow-400" },
-];
+import { Bug, Scan, Shield, Code, ArrowUpRight, Upload, Loader2 } from "lucide-react";
+import { analysisApi, type Session } from "@/lib/api";
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const loadStats = async () => {
+      try {
+        const data = await analysisApi.getMySessions();
+        setSessions(data);
+      } catch {
+        setSessions([]);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+
+    loadStats();
+  }, [user]);
+
+  const stats = useMemo(() => {
+    const scansRun = sessions.length;
+
+    const bugsFound = sessions.reduce(
+      (sum, s) => sum + (s.totalIssuesFound ?? 0),
+      0
+    );
+
+    const fixed = sessions.filter(
+      (s) => s.status === "Completed"
+    ).length;
+
+    const projects = new Set(
+      sessions
+        .map((s) => s.fileName || s.gitHubUrl || s.sessionId)
+        .filter(Boolean)
+    ).size;
+
+    return [
+      { label: "Bugs Found", value: bugsFound, icon: Bug, color: "text-destructive" },
+      { label: "Scans Run", value: scansRun, icon: Scan, color: "text-primary" },
+      { label: "Fixed", value: fixed, icon: Shield, color: "text-accent" },
+      { label: "Projects", value: projects, icon: Code, color: "text-yellow-400" },
+    ];
+  }, [sessions]);
+
   if (!user) return <Navigate to="/login" replace />;
 
   const displayName = `${user.firstName} ${user.lastName}`.trim();
@@ -39,7 +80,6 @@ const Dashboard = () => {
             </div>
           </motion.div>
 
-          {/* Quick Actions */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-8">
             <Link to="/submit" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground font-mono font-semibold text-sm glow-primary hover:opacity-90 transition-all">
               <Upload className="w-4 h-4" />
@@ -47,18 +87,18 @@ const Dashboard = () => {
             </Link>
           </motion.div>
 
-          {/* Stats */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {stats.map((s, i) => (
               <motion.div key={s.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 + i * 0.05 }} className="glass rounded-xl p-5">
                 <s.icon className={`w-5 h-5 ${s.color} mb-3`} />
-                <p className="text-2xl font-mono font-bold">{s.value}</p>
+                <p className="text-2xl font-mono font-bold">
+                  {loadingStats ? <Loader2 className="w-5 h-5 animate-spin" /> : s.value}
+                </p>
                 <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
               </motion.div>
             ))}
           </div>
 
-          {/* Recent Sessions CTA */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="glass rounded-2xl p-8 text-center">
             <Code className="w-10 h-10 text-primary mx-auto mb-4" />
             <h2 className="font-mono font-bold text-lg mb-2">Ready to detect bugs?</h2>
