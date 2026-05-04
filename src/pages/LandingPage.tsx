@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Bug, Shield, Zap, Code, ArrowRight, Scan, Brain } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import { useAuth } from "@/contexts/AuthContext";
 
 const features = [
   { icon: Brain, title: "AI-Powered Analysis", desc: "Deep learning models detect complex bugs humans miss" },
@@ -11,6 +12,8 @@ const features = [
 ];
 
 const LandingPage = () => {
+  const { user } = useAuth();
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       <div className="absolute inset-0 grid-pattern opacity-40" />
@@ -18,7 +21,6 @@ const LandingPage = () => {
 
       <Navbar />
 
-      {/* Hero */}
       <section className="relative pt-32 pb-20 px-4">
         <div className="container mx-auto text-center max-w-4xl">
           <motion.div
@@ -45,23 +47,44 @@ const LandingPage = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                to="/register"
-                className="group px-8 py-3.5 rounded-lg bg-primary text-primary-foreground font-mono font-semibold text-sm flex items-center gap-2 glow-primary hover:opacity-90 transition-all"
-              >
-                Get Started
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <Link
-                to="/login"
-                className="px-8 py-3.5 rounded-lg glass border-primary/30 text-foreground font-mono font-semibold text-sm hover:border-primary/60 transition-all"
-              >
-                Sign In
-              </Link>
+              {user ? (
+                <>
+                  <Link
+                    to="/dashboard"
+                    className="group px-8 py-3.5 rounded-lg bg-primary text-primary-foreground font-mono font-semibold text-sm flex items-center gap-2 glow-primary hover:opacity-90 transition-all"
+                  >
+                    Go to Dashboard
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+
+                  <Link
+                    to="/submit"
+                    className="px-8 py-3.5 rounded-lg glass border-primary/30 text-foreground font-mono font-semibold text-sm hover:border-primary/60 transition-all"
+                  >
+                    Submit Code
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/register"
+                    className="group px-8 py-3.5 rounded-lg bg-primary text-primary-foreground font-mono font-semibold text-sm flex items-center gap-2 glow-primary hover:opacity-90 transition-all"
+                  >
+                    Get Started
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+
+                  <Link
+                    to="/login"
+                    className="px-8 py-3.5 rounded-lg glass border-primary/30 text-foreground font-mono font-semibold text-sm hover:border-primary/60 transition-all"
+                  >
+                    Sign In
+                  </Link>
+                </>
+              )}
             </div>
           </motion.div>
 
-          {/* Floating code card */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
@@ -76,6 +99,7 @@ const LandingPage = () => {
                 BugDetect.AI — Scanning...
               </span>
             </div>
+
             <pre className="text-left text-xs sm:text-sm font-mono text-muted-foreground overflow-x-auto">
               <code>
 {`[SCAN] Analyzing Controllers/UserController.cs
@@ -89,7 +113,6 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Features */}
       <section className="relative py-20 px-4">
         <div className="container mx-auto max-w-5xl">
           <motion.h2
@@ -100,6 +123,7 @@ const LandingPage = () => {
           >
             Why <span className="text-primary">BugDetect</span>?
           </motion.h2>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {features.map((f, i) => (
               <motion.div
@@ -121,7 +145,6 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="border-t border-border/50 py-8 px-4">
         <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
